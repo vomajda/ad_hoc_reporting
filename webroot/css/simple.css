@@ -34,13 +34,13 @@ h2 {
     border-radius: 2px;
 }
 
-#reportManagerDisplay .reportName {
+.reportTable .reportName {
     font-size: 19pt; 
 	font-weight: bold;
     color: #333333;
 }
 
-#reportManagerDisplay .timestamp {
+.reportTable .timestamp {
     margin-top: 15px;
     font-size: 8pt; 
 	font-weight: normal;
@@ -50,7 +50,7 @@ h2 {
 }
 
 
-#reportManagerDisplay .report
+.reportTable .report
 {
     margin: 0px;
     padding: 0px;
@@ -66,7 +66,7 @@ h2 {
     color: #ffffff;
 }
 
-#reportManagerDisplay .report tr.header th
+.reportTable .report tr.header th
 {
     background: #f2f2f2;
     border-top-width: 1px;
@@ -82,7 +82,7 @@ h2 {
 }
 
 
-#reportManagerDisplay .report tr.body td
+.reportTable .report tr.body td
 {
     background: #FFFFFF;
     border-top-width: 0px;
@@ -97,7 +97,7 @@ h2 {
     color: #555555;
 }
 
-#reportManagerDisplay .report tr.footer td
+.reportTable .report tr.footer td
 {
     background: #FFFFFF;
     border-top-width: 0px;
