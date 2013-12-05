@@ -203,7 +203,6 @@ class AdHocReportsController extends AdHocReportingAppController {
 			
 			$reportData = $this->{$modelClass}->find('all', $params);
 			
-
 			$this->layout = 'report';
 						
 			$this->set('tableColumnWidth',$tableColumnWidth);
@@ -222,11 +221,11 @@ class AdHocReportsController extends AdHocReportingAppController {
 			} else { // Excel file
 				$this->layout = null;
 				$this->_export2Xls(
-					$reportData, 
-					$fieldsList, 
-					$fieldsType, 
-					$showNoRelated 
+					$reportData,
+					$fieldsList,
+					$fieldsType
 				);
+				exit();
 			}
 		}
 	}
@@ -633,10 +632,10 @@ class AdHocReportsController extends AdHocReportingAppController {
 		return $tableWidth;
 	}
 
-	public function _export2Xls(&$reportData = array(),&$fieldsList=array(), &$fieldsType=array(), &$showNoRelated = false ) {
+	public function _export2Xls(&$reportData = array(),&$fieldsList=array(), &$fieldsType=array()) {
 		App::import('Vendor', 'AdHocReporting.Excel');
 		$xls = new Excel();		 
-		$xls->buildXls($reportData, $fieldsList, $fieldsType, $showNoRelated);
+		$xls->buildXls($reportData, $fieldsList, $fieldsType);
 	}
 
 
