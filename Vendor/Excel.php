@@ -47,7 +47,7 @@ class Excel {
 	 * Renders an Excel spreadsheet.
 	 * refactored gently to allow an empty dataset to output an 
 	 * empty Excel spreadsheet. If the input data is an empty array, then the output Excel will have
-	 * only the header row, and the text "There is no data to show in this report" in cell A2.
+	 * only the header row.
 	 * 
 	 * @param array $reportData     A data array, constructed like a Cake find, with Models and fields.
 	 * @param array $fieldList      An array describing what fields should be included in each row, expressed as "Model.fieldName"
