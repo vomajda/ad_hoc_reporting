@@ -9,6 +9,9 @@
 ?>
 
 <div class="reportDetails">
+	<?php
+	// @todo - move this TribeHR-specific logo image out of this plugin
+	?>
 	<?php echo $this->Html->image('tribehr_logo.png', array('class'=>'logo')); ?>
 	<h1><?php echo ($reportName == '' ? 'Ad-Hoc Report' : $reportName);?></h1>
 	<h2><?php echo h($settings['Config']['name']); ?></h2>

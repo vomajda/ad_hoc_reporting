@@ -72,10 +72,7 @@ class Excel {
 		$row++;
 		
 		$col = 0;
-		if (empty($reportData)) {
-			$col = 0;
-			$this->xlsWriteLabel($row, $col, utf8_decode('There is no data to show in this report'));
-		} else {
+		if (!empty($reportData)) {
 			foreach ($reportData as $reportItem) {
 				$col = 0;
 				foreach ($fieldList as $field) {

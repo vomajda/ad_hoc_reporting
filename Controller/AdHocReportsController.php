@@ -12,10 +12,6 @@ class AdHocReportsController extends AdHocReportingAppController {
 	public $uses = array('AdHocReporting.AdHocReport');
 	public $helpers = array('Number', 'Form');
 
-	public function isAuthorized($user) {
-		return true;
-	}
-
 	public function index() {
 	
 		if (empty($this->request->data)) {
