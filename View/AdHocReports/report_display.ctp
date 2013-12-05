@@ -13,7 +13,7 @@
 	// @todo - move this TribeHR-specific logo image out of this plugin
 	?>
 	<?php echo $this->Html->image('tribehr_logo.png', array('class'=>'logo')); ?>
-	<h1><?php echo ($reportName == '' ? 'Ad-Hoc Report' : $reportName);?></h1>
+	<h1><?php echo ($reportName == '' ? 'Ad-Hoc Report' : h($reportName));?></h1>
 	<h2><?php echo h($settings['Config']['name']); ?></h2>
 	<div class="timestamp">Report Generated : <strong><?php echo date('Y-m-d H:i:s'); ?></strong></div>
 </div>
