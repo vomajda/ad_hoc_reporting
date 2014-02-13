@@ -156,9 +156,9 @@ class AdHocReportsController extends AdHocReportingAppController {
 						}
 					}
 					if ($criteria == ''){
-						$conditionsList[$filter['Field']] = $filter['Value'];
+						$conditionsList[] = array($filter['Field'] => $filter['Value']);
 					} else {
-						$conditionsList[$filter['Field']." ".$criteria] = $filter['Value'];
+						$conditionsList[] = array($filter['Field']." ".$criteria => $filter['Value']);
 					}
 				}
 			}
