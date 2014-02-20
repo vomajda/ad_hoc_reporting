@@ -22,7 +22,6 @@
     <?php 
     $counter = 0;
     $columns = 0;
-    $floatFields = array();
     ?>     
     <?php if (!empty($reportData)):?>
     <table cellpadding = "0" cellspacing = "0" class="report" width="<?php echo $tableWidth;?>">
@@ -35,8 +34,6 @@
                 $displayField = str_replace('_', ' ', $displayField);
                 $displayField = ucfirst($displayField);
                 echo $displayField; 
-                if ( $fieldsType[$field] == 'float') // init array for float fields sum
-                    $floatFields[$field] = 0;
                 ?>
                 </th>
                 <?php endforeach; ?>
@@ -56,8 +53,7 @@
                     <?php                     
                     $params = explode('.',$field);
                     if ( $fieldsType[$field] == 'float') {
-                        echo $this->element('format_float',array('f'=>$reportItem[$params[0]][$params[1]]));
-                        $floatFields[$field] += $reportItem[$params[0]][$params[1]];
+                        echo h($reportItem[$params[0]][$params[1]]);
                     }                        
                     else
                         echo h($reportItem[$params[0]][$params[1]]);
@@ -66,18 +62,6 @@
                 <?php endforeach; ?>
             </tr>
         <?php endforeach; ?>
-        <?php if ( count($floatFields)>0 ) { ?>
-            <tr class="footer">
-                <?php foreach ($fieldList as $field): ?>
-                <td>
-                <?php
-                if ( $fieldsType[$field] == 'float') 
-                    echo $this->element('format_float',array('f'=>$floatFields[$field]));
-                ?>
-                </td>
-                <?php endforeach; ?>
-            </tr>
-         <?php } ?>
     </table>
     <?php if ( $showRecordCounter ) { ?>    
         <div class="counter">Total Records: <?php echo $counter;?></div>
