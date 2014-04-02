@@ -299,7 +299,7 @@ $(document).ready(function() {
     
     // change tr background color when checked
     // closest parent element
-    $("tr :checkbox[name*='[Add]']").live("click", function() {
+    $("tr :checkbox[name*='[Add]']").on("click", function() {
         $(this).closest("tr").css("background-color", this.checked ? "#eee" : "");
     });
     
