@@ -115,7 +115,7 @@ class AdHocReportsController extends AdHocReportingAppController {
 			if (!empty($this->request->data['Filters'])){
 				foreach($this->request->data['Filters'] as $filter){
 					
-					if (empty($filter['Value'])){
+					if (empty($filter['Value']) && !is_numeric($filter['Value'])) {
 						continue;
 					}
 					
