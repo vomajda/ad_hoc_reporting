@@ -33,13 +33,11 @@ echo $this->Html->script(array('https://ajax.googleapis.com/ajax/libs/jquery/1.7
 
 				// minimum column width is either 50 or (length * 9) to prevent label overflow
                 $minWidth = 50;
-				$columnWidth = max(array($tableColumnWidth[$field], $minWidth, strlen($displayField) * 9));
+				$columnWidth = max(array($tableColumnWidth[$field], $minWidth, strlen($displayField) * 8));
 				// force ID cols to be 50 despite they're not configured like that in DB
                 $columnWidth = strtolower($displayField) == 'id' ?  $minWidth : $columnWidth;
             ?>
-                <th width="<?php echo $columnWidth; ?>">
-                <?php echo $displayField; ?>
-                </th>
+                <th width="<?php echo $columnWidth; ?>"><?php echo $displayField; ?></th>
             <?php } ?>
         </tr>
         <?php
@@ -50,14 +48,12 @@ echo $this->Html->script(array('https://ajax.googleapis.com/ajax/libs/jquery/1.7
             }
         ?>
             <tr class="body<?php echo $class;?>">
-                <?php foreach ($fieldList as $field): ?>
-                    <td>
-                    <?php
+                <?php foreach ($fieldList as $field) {
                     $params = explode('.',$field);
-                    echo h($reportItem[$params[0]][$params[1]]);
-                    ?>
-                    </td>
-                <?php endforeach; ?>
+                    $value = h($reportItem[$params[0]][$params[1]]);
+                ?>
+                    <td><?php echo $value; ?></td>
+                <?php } ?>
             </tr>
         <?php } ?>
     </table>
@@ -75,5 +71,80 @@ echo $this->Html->script(array('https://ajax.googleapis.com/ajax/libs/jquery/1.7
             function() { $( this ).css('white-space', 'normal'); },
             function() { $( this ).css('white-space', 'nowrap'); }
         );
+
+        /* Various functions */
+        var fn = {
+            /**
+             * Returns if given element is empty
+             * @param elem jQuery element object
+             * @returns {boolean}
+             */
+            isEmpty: function(elem) {
+                return !fn.getTrimmedContent(elem);
+            },
+            /**
+             * Return minimum cell width which is either 50px or length * 8 (to prevent overflowing)
+             * @param elem jQuery element object
+             * @returns {number}
+             */
+            getMinWidth: function(elem) {
+                return Math.max(50, fn.getTrimmedContent(elem).length * 8);
+            },
+            /**
+             * Return trimmed element content
+             * @param elem jQuery element object
+             * @returns {string}
+             */
+            getTrimmedContent: function(elem) {
+                return $.trim(elem.html());
+            }
+        },
+
+        /* Logic related to auto-shrinking empty columns */
+        shrinkEmptyColumns = {
+            table: null,
+            /**
+             * Return a column (set of cells) by given index
+             * @param index Number
+             * @returns {Array}
+             */
+            getColumnByIndex: function(index) {
+                var cells = [];
+                $(shrinkEmptyColumns.table + 'tr.body').each(function(i, v) {
+                    cells.push($(this).find('td').eq(index));
+                });
+                return cells;
+            },
+            /* Check if given column is empty and if so shrink the header cell */
+            processColumn: function(index) {
+                var header = $(shrinkEmptyColumns.table + 'tr.header th').eq(index),
+                    cells = shrinkEmptyColumns.getColumnByIndex(index),
+                    shrink = true;
+
+                $.each(cells, function(i, v) {
+                    if (!fn.isEmpty($(this))) {
+                        return shrink = false;
+                    }
+                });
+
+                if (shrink) {
+                    header.attr('width', fn.getMinWidth(header));
+                }
+            },
+            /* For given table process column by column */
+            processTable: function(table) {
+                shrinkEmptyColumns.table = table + ' ';
+                var i, cols = $(shrinkEmptyColumns.table + 'tr:first > th').length;
+                for (i = 0; i < cols; i++) {
+                    shrinkEmptyColumns.processColumn(i);
+                };
+            },
+            go: function() {
+                shrinkEmptyColumns.processTable('table.report');
+            }
+        };
+
+        // shrink the empty columns!
+        shrinkEmptyColumns.go();
     });
 </script>
