@@ -21,9 +21,6 @@
 							'data-fieldName' => $class . "." . $field
 						)
 					);
-//			echo '</div>';
-
-//			echo '<div>';
 
 				echo '<label for="'.$class . Inflector::camelize($field) . 'Add'.'">';
 				echo Inflector::humanize(Inflector::underscore($class)) .' &gt; '. Inflector::humanize($field);
