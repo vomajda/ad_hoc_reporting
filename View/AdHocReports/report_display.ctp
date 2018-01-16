@@ -20,60 +20,53 @@ echo $this->Html->script(array('https://ajax.googleapis.com/ajax/libs/jquery/1.7
 </div>
 
 <div class="reportTable">
-    <?php
-    $counter = 0;
+	<?php
+	$counter = 0;
 
-    if (!empty($reportData)) { ?>
-    <table cellpadding = "0" cellspacing = "0" class="report" width="<?php echo $tableWidth;?>">
-        <tr class="header">
-            <?php foreach ($fieldList as $field) {
+	if (!empty($reportData)) { ?>
+	<table cellpadding = "0" cellspacing = "0" class="report" width="<?php echo $tableWidth;?>">
+		<tr class="header">
+			<?php foreach ($fieldList as $field) {
 				$displayField = substr($field, strpos($field, '.')+1);
 				$displayField = str_replace('_', ' ', $displayField);
 				$displayField = ucfirst($displayField);
 
-				// minimum column width is either 50 or (length * 9) to prevent label overflow
-                $minWidth = 50;
-				$columnWidth = max(array($tableColumnWidth[$field], $minWidth, strlen($displayField) * 9));
-				// force ID cols to be 50 despite they're not configured like that in DB
-                $columnWidth = strtolower($displayField) == 'id' ?  $minWidth : $columnWidth;
-            ?>
-                <th width="<?php echo $columnWidth; ?>">
-                <?php echo $displayField; ?>
-                </th>
-            <?php } ?>
-        </tr>
-        <?php
-        foreach ($reportData as $reportItem) {
-            $class = null;
-            if ($counter++ % 2 == 0) {
-                $class = ' altrow';
-            }
-        ?>
-            <tr class="body<?php echo $class;?>">
-                <?php foreach ($fieldList as $field): ?>
-                    <td>
-                    <?php
-                    $params = explode('.',$field);
-                    echo h($reportItem[$params[0]][$params[1]]);
-                    ?>
-                    </td>
-                <?php endforeach; ?>
-            </tr>
-        <?php } ?>
-    </table>
-    <?php if ( $showRecordCounter ) { ?>
-        <div class="counter">Total Records: <?php echo $counter;?></div>
-    <?php } ?>
-    <div class="timestamp"><?php echo __('Report Generated') . ' : ' . date('Y-m-d H:i:s'); ?></div>
-    <?php } ?>
+				// column width is either the actual width (can cause issues for booleans), or 50, or (length * 8) to prevent overflow
+				$columnWidth = max(array($tableColumnWidth[$field], 50, strlen($displayField) * 8));
+			?>
+				<th width="<?php echo $columnWidth; ?>"><?php echo $displayField; ?></th>
+			<?php } ?>
+		</tr>
+		<?php
+		foreach ($reportData as $reportItem) {
+			$class = null;
+			if ($counter++ % 2 == 0) {
+				$class = ' altrow';
+			}
+		?>
+			<tr class="body<?php echo $class;?>">
+				<?php foreach ($fieldList as $field) {
+					$params = explode('.',$field);
+					$value = h($reportItem[$params[0]][$params[1]]);
+				?>
+					<td><?php echo $value; ?></td>
+				<?php } ?>
+			</tr>
+		<?php } ?>
+	</table>
+	<?php if ( $showRecordCounter ) { ?>
+		<div class="counter">Total Records: <?php echo $counter;?></div>
+	<?php } ?>
+	<div class="timestamp"><?php echo __('Report Generated') . ' : ' . date('Y-m-d H:i:s'); ?></div>
+	<?php } ?>
 </div>
 
 <script>
-    $(function() {
-        // toggle text wrapping on hover to see hidden overflown content
-        $('tr.body td').hover(
-            function() { $( this ).css('white-space', 'normal'); },
-            function() { $( this ).css('white-space', 'nowrap'); }
-        );
-    });
+	$(function() {
+		// toggle text wrapping on hover to see hidden overflown content
+		$('tr.body td').hover(
+			function() { $( this ).css('white-space', 'normal'); },
+			function() { $( this ).css('white-space', 'nowrap'); }
+		);
+	});
 </script>
