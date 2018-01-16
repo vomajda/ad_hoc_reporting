@@ -82,6 +82,17 @@ img.logo {
     margin-bottom: 10px;
 }
 
+input#expandCollapseAll,
+label {
+    cursor: pointer;
+    margin-bottom: 5pt;
+}
+
+label {
+    font-size: 10pt;
+    vertical-align: text-top;
+}
+
 table {
     float: left;
     clear: both;

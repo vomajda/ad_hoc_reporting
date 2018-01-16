@@ -21,9 +21,6 @@
 							'data-fieldName' => $class . "." . $field
 						)
 					);
-//			echo '</div>';
-
-//			echo '<div>';
 
 				echo '<label for="'.$class . Inflector::camelize($field) . 'Add'.'">';
 				echo Inflector::humanize(Inflector::underscore($class)) .' &gt; '. Inflector::humanize($field);
@@ -33,9 +30,6 @@
 
 				$currType = ( isset($fieldarray['type']) ? $fieldarray['type'] : $fieldarray['Type'] );
 				echo $this->Form->input($fieldname.'.Type',array('type'=>'hidden','value'=>$currType));
-
-				$currLength = ( isset($fieldarray['length']) ? $fieldarray['length'] : ( isset($fieldarray['Length']) ? $fieldarray['Length'] : null) );
-				echo $this->Form->input($fieldname.'.Length',array('type'=>'hidden','value'=>$currLength));
 
 			echo '</div>';
 		echo '</div>';

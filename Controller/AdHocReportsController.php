@@ -12,6 +12,14 @@ class AdHocReportsController extends AdHocReportingAppController {
 	public $uses = array('AdHocReporting.AdHocReport');
 	public $helpers = array('Number', 'Form');
 
+	const COLUMN_MAX_CHAR_LENGTH = 100;
+	const COLUMN_MIN_PIXEL_WIDTH = 50;
+	const CHAR_PIXEL_WIDTH = 8;
+
+	protected $tableData = array();
+	protected $columnWidth = array();
+	protected $columnOverflown = false;
+
 	public function index() {
 
 		if (empty($this->request->data)) {
@@ -94,7 +102,6 @@ class AdHocReportsController extends AdHocReportingAppController {
 									}
 									$fieldsPosition[$model.'.'.$field] = ( $parameters['Position'] != '' ? $parameters['Position'] : 0 );
 									$fieldsType[$model.'.'.$field] = $parameters['Type'];
-									$fieldsLength[$model.'.'.$field] = $parameters['Length'];
 								}
 							}
 						} // is array parameters
@@ -185,16 +192,12 @@ class AdHocReportsController extends AdHocReportingAppController {
 			/*****************/
 			/*    OTHER     */
 
-			$tableColumnWidth = $this->_getTableColumnWidth($fieldsLength,$fieldsType);
-			$tableWidth = $this->_getTableWidth($tableColumnWidth);
-			$recursive = 1;
-
 			// here's where the real action takes place.
 			// everything prior to this line was just to set up these parameter arrays
 
 			// let's build this separately so we can debug and look at it
 			$params = array(
-				'recursive' => $recursive,
+				'recursive' => 1,
 				'fields' => $fieldsList,
 				'order' => $order,
 				'conditions' => $conditions,
@@ -205,13 +208,17 @@ class AdHocReportsController extends AdHocReportingAppController {
 
 			$this->layout = 'report';
 
-			$this->set('tableColumnWidth',$tableColumnWidth);
-			$this->set('tableWidth',$tableWidth);
+			$labels = array(
+				'expand' => __('Expand the column cells to view all text.'),
+				'collapse' => __('Shrink the column cells to show first line only.'),
+			);
+			$this->set(compact('labels'));
 
-			$this->set('fieldList',$fieldsList);
-			$this->set('fieldsType',$fieldsType);
-			$this->set('fieldsLength',$fieldsLength);
-			$this->set('reportData',$reportData);
+			$this->prepareTableData($fieldsList, $reportData);
+			$this->set('data', $this->getTableData());
+			$this->set('width', $this->getColumnWidths());
+			$this->set('overflow', $this->isColumnOverflown());
+
 			$this->set('reportName',$this->data['AdHocReport']['Title']);
 			$this->set('reportStyle',$this->data['AdHocReport']['Style']);
 			$this->set('showRecordCounter',$this->data['AdHocReport']['ShowRecordCounter']);
@@ -593,46 +600,152 @@ class AdHocReportsController extends AdHocReportingAppController {
 		return $modelSchema;
 	}
 
-	// calculate the html table columns width
-	public function _getTableColumnWidth($fieldsLength=array(),$fieldsType=array()) {
-		$minWidth = 4;
-		$maxWidth = 25;
-		$tableColumnWidth = array();
-		foreach ($fieldsLength as $field => $length):
-			if ( $length != '') {
-				if ( $length < $maxWidth )
-					$width = $length * 9;
-				else
-					$width = $maxWidth * 9;
-				if ( $length < $minWidth )
-					$width = $length * 40;
-				$tableColumnWidth[$field] = $width;
-			} else {
-				$fieldType = $fieldsType[$field];
-				switch ($fieldType) {
-					case "date":
-						$width = 120;
-						break;
-					case "float":
-						$width = 150;
-						break;
-					case 'text':
-						$width = 500;
-						break;
-					default:
-						$width = 120;
-						break;
-				}
-				$tableColumnWidth[$field] = $width;
-			}
-		endforeach;
-		return $tableColumnWidth;
+	/**
+	 * Prepare clean data for report table and calculate the columns' width
+	 * @param array $fieldList
+	 * @param array $reportData
+	 */
+	public function prepareTableData($fieldList = array(), $reportData = array()) {
+		// push header data to $this->tableData
+		$this->setHeaderData($fieldList);
+
+		// push body data row by row to $this->tableData
+		$this->setBodyData($fieldList, $reportData);
+
+		// compute the widths in px
+		$this->setPixelColumnWidth();
 	}
 
-	// calculate the html table width
-	public function _getTableWidth($tableColumnWidth = array()) {
-		$tableWidth = array_sum($tableColumnWidth);
-		return $tableWidth;
+	/**
+	 * Get column headers and set them as a (first) row in tableData
+	 * @param $fieldList
+	 * @uses self::getHeaderValue()
+	 */
+	public function setHeaderData($fieldList) {
+		$rowData = $this->getRowData($fieldList, array(
+			'method' => array('self', 'getHeaderValue'),
+			'param' => null
+		));
+
+		// convert the first letter to upper-case
+		$rowData = array_map(function($item) { return ucfirst($item); }, $rowData);
+		$this->setTableDataRow($rowData);
+	}
+
+	/**
+	 * Get report rows and set them in tableData
+	 * @param $fieldList
+	 * @param $reportData
+	 * @uses self::getBodyValue()
+	 */
+	public function setBodyData($fieldList, $reportData) {
+		foreach ($reportData as $reportItem) {
+			$rowData = $this->getRowData($fieldList, array(
+				'method' => array('self', 'getBodyValue'),
+				'param' => $reportItem
+			));
+
+			$this->setTableDataRow($rowData);
+		}
+	}
+
+	/**
+	 * Helper method to extract header cell value
+	 * @param $field
+	 * @return string
+	 */
+	public static function getHeaderValue($field) {
+		$field = substr($field, strpos($field, '.') + 1);
+		$field = str_replace('_', ' ', $field);
+
+		return $field;
+	}
+
+	/**
+	 * Helper method to extract body cell value
+	 * @param $field
+	 * @param $reportItem
+	 * @return string
+	 */
+	public static function getBodyValue($field, $reportItem) {
+		$params = explode('.', $field);
+		$value = h($reportItem[$params[0]][$params[1]]);
+
+		return $value;
+	}
+
+	/**
+	 * Iterate through row cells and extract their values using method passed in $options
+	 * @param $fieldList
+	 * @param $options Defines the method to be called upon the cell data and optional parameter
+	 * @return array
+	 */
+	public function getRowData($fieldList, $options) {
+		$rowData = array();
+		foreach ($fieldList as $idx => $field) {
+			$field = call_user_func($options['method'], $field, $options['param']);
+
+			$this->setColumnCharWidth($idx, $field);
+			$rowData[] = $field;
+		}
+
+		return $rowData;
+	}
+
+	/**
+	 * Set char width of a column, set overflow flag if necessary
+	 * @param $idx
+	 * @param $content
+	 */
+	public function setColumnCharWidth($idx, $content) {
+		$columnWidth = max(array($this->getColumnWidth($idx), min(array(strlen($content), self::COLUMN_MAX_CHAR_LENGTH))));
+		$this->setColumnWidth($idx, $columnWidth);
+
+		// detect overflow
+		if (!$this->isColumnOverflown() && strlen($content) > self::COLUMN_MAX_CHAR_LENGTH) {
+			$this->setColumnOverflown(true);
+		}
+	}
+
+	/**
+	 * Convert char column widths to pixel widths
+	 */
+	public function setPixelColumnWidth() {
+		foreach ($this->getColumnWidths() as $idx => $chars) {
+			$pixelWidth = max(array(self::COLUMN_MIN_PIXEL_WIDTH, $chars * self::CHAR_PIXEL_WIDTH));
+			$this->setColumnWidth($idx, $pixelWidth);
+		}
+	}
+
+	/**
+	 * Basic getters/setters below
+	 */
+	public function getColumnWidth($idx) {
+		return empty($this->columnWidth[$idx]) ? 0 : $this->columnWidth[$idx];
+	}
+
+	public function setColumnWidth($idx, $columnWidth) {
+		$this->columnWidth[$idx] = $columnWidth;
+	}
+
+	public function getColumnWidths() {
+		return $this->columnWidth;
+	}
+
+	public function setTableDataRow($rowData) {
+		$this->tableData[] = $rowData;
+	}
+
+	public function getTableData() {
+		return $this->tableData;
+	}
+
+	public function isColumnOverflown() {
+		return $this->columnOverflown;
+	}
+
+	public function setColumnOverflown($columnOverflown) {
+		$this->columnOverflown = $columnOverflown;
 	}
 
 	public function _export2Xls(&$reportData = array(),&$fieldsList=array(), &$fieldsType=array()) {
@@ -640,6 +753,4 @@ class AdHocReportsController extends AdHocReportingAppController {
 		$xls = new Excel();
 		$xls->buildXls($reportData, $fieldsList, $fieldsType);
 	}
-
-
 }
